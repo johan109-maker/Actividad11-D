@@ -1,0 +1,557 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Actividad 11-D</title>
+  <style>
+    :root{--bg:#fff7ed;--bg2:#fde68a;--bg3:#fca5a5;--card:rgba(255,255,255,.86);--text:#3f2a1d;--muted:#7b5a47;--red:#ef4444;--orange:#f97316;--green:#16a34a;--shadow:0 24px 55px rgba(124,45,18,.18)}
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;font-family:"Trebuchet MS","Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(255,255,255,.7),transparent 25%),linear-gradient(135deg,var(--bg),var(--bg2) 55%,var(--bg3));overflow-x:hidden}
+    body.lock{overflow:hidden}
+    .shell{width:min(1350px,calc(100% - 28px));margin:auto;padding:24px 0 70px;position:relative;z-index:1}
+    .blob,.blob:before,.blob:after{position:fixed;border-radius:999px;pointer-events:none;z-index:0;animation:float 12s ease-in-out infinite}
+    .blob{width:220px;height:220px;left:-50px;top:16vh;background:rgba(251,113,133,.22)} .blob:before,.blob:after{content:""} .blob:before{width:120px;height:120px;left:62vw;top:65vh;background:rgba(245,158,11,.18)} .blob:after{width:150px;height:150px;left:78vw;top:28vh;background:rgba(239,68,68,.15)}
+    .panel{background:var(--card);border:1px solid rgba(255,255,255,.7);border-radius:28px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+    .hero{display:grid;grid-template-columns:1.3fr .9fr;gap:20px}
+    .hero .panel,.board{padding:24px}
+    .tag{display:inline-block;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.78);font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9a3412}
+    h1{margin:14px 0 10px;font-size:clamp(2.2rem,5vw,4.2rem);line-height:.95;letter-spacing:-.04em;max-width:12ch}
+    h2{margin:0 0 8px;font-size:1.35rem}
+    p{margin:0} .muted{color:var(--muted);line-height:1.6}
+    .stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    .stat{flex:1 1 150px;padding:14px;border-radius:18px;background:rgba(255,255,255,.78)} .stat strong{display:block;font-size:1.7rem}
+    .wheel{position:relative;height:280px;border-radius:28px;background:radial-gradient(circle at center,#fff 0%,#fff7ed 65%,#fed7aa 100%);overflow:hidden;border:8px solid rgba(255,255,255,.72)}
+    .wheel-track{position:absolute;inset:16px;border-radius:50%;transition:transform 4.4s cubic-bezier(.12,.86,.18,1)}
+    .wheel-pointer{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:28px solid #dc2626;z-index:4}
+    .wheel-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));box-shadow:0 12px 24px rgba(239,68,68,.3);z-index:3}
+    .wheel-name{position:absolute;left:50%;top:50%;width:150px;margin-left:-75px;text-align:center;transform-origin:center -8px}
+    .wheel-name span{display:inline-block;padding:8px 12px;border-radius:999px;background:#fff;color:#7c2d12;font-weight:800;box-shadow:0 8px 16px rgba(124,45,18,.12);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:0;border-radius:999px;padding:13px 20px;font:inherit;font-weight:800;cursor:pointer;transition:.2s transform,.2s opacity}
+    button:hover{transform:translateY(-2px)} button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .primary{background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;box-shadow:0 14px 28px rgba(239,68,68,.25)} .secondary{background:#fff;color:#9a3412}
+    .result,.status{min-height:52px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.78);line-height:1.5;color:var(--muted)}
+    .board{margin-top:22px}
+    .board-head{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+    .progress{flex:1 1 280px;min-width:280px} .bar{height:14px;background:rgba(255,255,255,.82);border-radius:999px;overflow:hidden} .fill{height:100%;width:0;background:linear-gradient(90deg,var(--red),#f59e0b,#22c55e);transition:width .5s ease}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .card{perspective:1400px;min-height:330px;cursor:pointer} .card.locked{cursor:default}
+    .card.target{transform:translateY(-6px)}
+    .inner{position:relative;min-height:330px;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.85,.22,1)} .card.flipped .inner{transform:rotateY(180deg)}
+    .card.target .inner{animation:pulseTarget 1.5s ease-in-out infinite}
+    .face{position:absolute;inset:0;border-radius:24px;overflow:hidden;backface-visibility:hidden;background:rgba(255,255,255,.95);box-shadow:0 16px 34px rgba(124,45,18,.12);display:flex;flex-direction:column}
+    .card.target .face{box-shadow:0 0 0 4px rgba(249,115,22,.55),0 22px 40px rgba(239,68,68,.24)}
+    .face img{width:100%;height:246px;object-fit:cover;background:#fcd9b6}
+    .back{transform:rotateY(180deg);background:linear-gradient(180deg,#fff,rgba(254,242,242,.95))}
+    .info{padding:15px;display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center}
+    .label{margin:0;font-size:1.08rem} .sub{margin:0;color:var(--muted);line-height:1.45;font-size:.94rem}
+    .badge{display:inline-block;padding:7px 11px;border-radius:999px;background:rgba(22,163,74,.12);color:var(--green);font-size:.82rem;font-weight:800}
+    .overlay,.modal,.final{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}
+    .overlay{background:radial-gradient(circle at top,rgba(255,255,255,.9),transparent 30%),linear-gradient(180deg,rgba(251,191,36,.35),rgba(239,68,68,.32)),#fff7ed}
+    .hidden{display:none}
+    .intro,.dialog,.final-card{width:min(920px,100%);background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.85);border-radius:34px;box-shadow:0 28px 70px rgba(124,45,18,.2);backdrop-filter:blur(14px)}
+    .intro{padding:34px;display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
+    .intro h1{font-size:clamp(2.4rem,6vw,4.8rem)} .intro-stage{min-height:330px;border-radius:28px;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.95),transparent 26%),linear-gradient(150deg,#fb7185,#fdba74 50%,#fde68a);position:relative;overflow:hidden}
+    .intro-stage .bubble,.intro-stage .spark,.intro-stage .polaroid{position:absolute;animation:float 6s ease-in-out infinite}
+    .intro-stage .bubble{border-radius:999px;background:rgba(255,255,255,.42)} .bubble.one{width:90px;height:90px;top:24px;left:28px}.bubble.two{width:58px;height:58px;right:34px;top:36px;animation-delay:-2s}.bubble.three{width:120px;height:120px;left:44%;bottom:34px;animation-delay:-3.2s}
+    .spark{width:20px;height:20px;background:#fff7ed;clip-path:polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%)} .spark.one{left:60px;bottom:72px}.spark.two{right:70px;bottom:98px;animation-delay:-1s}.spark.three{right:110px;top:110px;animation-delay:-2.4s}
+    .polaroid{width:150px;height:190px;background:rgba(255,255,255,.93);border-radius:18px;padding:10px;box-shadow:0 18px 30px rgba(124,45,18,.16)} .polaroid:before{content:"";display:block;width:100%;height:128px;border-radius:12px;background:linear-gradient(135deg,rgba(251,113,133,.7),rgba(253,186,116,.8));margin-bottom:10px}.polaroid:after{content:"Recuerdos";display:block;text-align:center;font-weight:700;color:#9a3412}.polaroid.one{top:42px;left:38px;transform:rotate(-11deg)}.polaroid.two{right:36px;top:88px;transform:rotate(12deg);animation-delay:-2.6s}
+    .modal{background:rgba(60,24,6,.38);z-index:15} .dialog{max-width:560px} .dialog-body{padding:26px}
+    .preview{width:100%;max-height:270px;object-fit:cover;border-radius:24px;margin-bottom:14px;box-shadow:0 14px 28px rgba(124,45,18,.14);background:#fcd9b6}
+    .input{width:100%;border:1px solid rgba(154,52,18,.18);border-radius:18px;padding:15px 16px;font:inherit;font-size:1rem;background:#fff;color:var(--text);outline:none}
+    .input:focus{border-color:rgba(239,68,68,.45);box-shadow:0 0 0 4px rgba(239,68,68,.12)}
+    .attempts{display:flex;gap:8px;margin:14px 0 16px} .dot{width:14px;height:14px;border-radius:999px;background:rgba(154,52,18,.16)} .dot.used{background:var(--red)} .dot.ok{background:var(--green)}
+    .suggestions{display:none;margin-top:10px;padding:8px;border-radius:18px;background:#fff;max-height:220px;overflow-y:auto;box-shadow:0 16px 30px rgba(124,45,18,.12)}
+    .suggestions.show{display:grid;gap:8px}
+    .suggestion{width:100%;text-align:left;background:rgba(255,247,237,.95);color:#7c2d12;padding:11px 14px;border-radius:14px}
+    .turn-banner{position:fixed;left:50%;top:24px;transform:translateX(-50%);width:min(760px,calc(100% - 24px));padding:18px 22px;border-radius:24px;background:rgba(255,255,255,.94);box-shadow:0 20px 40px rgba(124,45,18,.18);border:1px solid rgba(255,255,255,.88);z-index:18;text-align:center}
+    .turn-banner strong{display:block;font-size:clamp(1.5rem,4vw,2.4rem);margin-bottom:6px}
+    .final{background:radial-gradient(circle at top,rgba(255,255,255,.28),transparent 26%),rgba(76,29,8,.56);z-index:20}
+    .final-card{max-width:860px;padding:34px;text-align:center;background:radial-gradient(circle at top,rgba(255,255,255,.94),transparent 34%),linear-gradient(160deg,rgba(255,255,255,.96),rgba(255,247,237,.92))}
+    .final-card h2{font-size:clamp(2.1rem,5vw,4rem);line-height:.95;letter-spacing:-.05em;margin:10px 0 12px}
+    .credits{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px} .credit{padding:16px;border-radius:20px;background:rgba(255,255,255,.86)}
+    .confetti{position:fixed;width:10px;height:16px;top:-30px;opacity:0;z-index:21;animation:fall 3.6s linear forwards}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}} @keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:1;transform:translateY(110vh) rotate(720deg)}} @keyframes pulseTarget{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+    @media (max-width:980px){.hero,.intro{grid-template-columns:1fr}.intro-stage{min-height:280px}}
+    @media (max-width:640px){.shell{width:min(100% - 16px,1350px)}.hero .panel,.board,.intro,.dialog-body,.final-card{padding:18px}.grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.card,.inner{min-height:290px}.face img{height:205px}.wheel{height:250px}}
+  </style>
+</head>
+<body class="lock">
+  <div class="blob"></div>
+  <div class="overlay" id="introOverlay">
+    <div class="intro">
+      <section>
+        <span class="tag">Actividad 11-D</span>
+        <h1>Adivina de quién es cada personaje</h1>
+        <p class="muted">Entra al collage, mira el personaje o dibujo favorito de cada compañero y trata de descubrir a quién pertenece cada cartilla. Tendrán tres intentos por personaje, una ruleta para elegir participantes y un cierre especial cuando logren voltear todas.</p>
+        <div class="controls" style="margin-top:20px">
+          <button class="primary" id="startButton">Iniciar actividad</button>
+        </div>
+      </section>
+      <div class="intro-stage" aria-hidden="true">
+        <div class="bubble one"></div><div class="bubble two"></div><div class="bubble three"></div>
+        <div class="spark one"></div><div class="spark two"></div><div class="spark three"></div>
+        <div class="polaroid one"></div><div class="polaroid two"></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="panel">
+        <span class="tag">Juego del salón</span>
+        <h1>Personajes, recuerdos y sorpresas</h1>
+        <p class="muted">Haz clic en cualquier tarjeta para adivinar de quién es ese personaje. Si aciertas, la tarjeta se voltea y mostrará la foto de chiquito del compañero con su nombre. Cuando todo el collage esté completo, aparecerá un cierre especial para el curso.</p>
+        <div class="stats">
+          <div class="stat"><strong id="statTotal">0</strong><span>Tarjetas totales</span></div>
+          <div class="stat"><strong id="statSolved">0</strong><span>Tarjetas volteadas</span></div>
+          <div class="stat"><strong id="statPending">0</strong><span>Faltan por descubrir</span></div>
+        </div>
+      </div>
+      <aside class="panel">
+        <h2>Ruleta del intento</h2>
+        <div class="wheel" id="wheel">
+          <div class="wheel-pointer"></div>
+          <div class="wheel-track" id="wheelTrack"></div>
+          <div class="wheel-center"></div>
+        </div>
+        <div class="controls" style="margin:14px 0 12px">
+          <button class="primary" id="spinButton">Girar ruleta</button>
+          <button class="secondary" id="removeButton" disabled>Eliminar de la ruleta</button>
+        </div>
+        <div class="result" id="rouletteResult">La ruleta sirve para elegir al azar quién pasa a intentar adivinar. Después puedes quitar ese nombre para que no vuelva a salir.</div>
+      </aside>
+    </section>
+
+    <section class="panel board">
+      <div class="board-head">
+        <div>
+          <h2>Collage del salón</h2>
+          <p class="muted">Cada tarjeta oculta al dueño del personaje. Haz clic para intentar adivinar de quién es.</p>
+        </div>
+        <div class="progress">
+          <div class="bar"><div class="fill" id="progressFill"></div></div>
+          <p class="muted" id="progressText" style="margin-top:8px">0 de 0 tarjetas descubiertas.</p>
+        </div>
+      </div>
+      <div class="grid" id="cardGrid"></div>
+    </section>
+  </main>
+
+  <div class="modal hidden" id="guessModal">
+    <div class="dialog">
+      <div class="dialog-body">
+        <img class="preview" id="modalPreview" alt="Personaje secreto" />
+        <h2 id="modalTitle" style="margin-bottom:8px">Personaje</h2>
+        <p class="muted" id="modalHint"></p>
+        <div class="attempts" id="attemptsRow"></div>
+        <input class="input" id="guessInput" type="text" autocomplete="off" placeholder="Escribe el nombre de la persona" />
+        <div class="suggestions" id="suggestions"></div>
+        <div class="status" id="guessStatus" style="margin-top:14px">Escribe un nombre y verás sugerencias filtradas del salón.</div>
+        <div class="controls" style="margin-top:16px">
+          <button class="primary" id="submitGuess">Enviar</button>
+          <button class="secondary" id="closeModal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="turn-banner hidden" id="turnBanner">
+    <strong id="turnBannerName">Turno</strong>
+    <p class="muted" id="turnBannerText">La ruleta elegirá a alguien del salón.</p>
+  </div>
+
+  <div class="final hidden" id="finalOverlay">
+    <div class="final-card">
+      <span class="tag">Actividad completada</span>
+      <h2>Lo lograron, voltearon todo el collage</h2>
+      <p class="muted">Muchas gracias a todos por participar y por formar parte de este salón tan especial que hemos formado poco a poco, creando recuerdos inolvidables y únicos que nos acompañarán por siempre. De parte de su representante les doy la bienvenida y un feliz regreso a clases, junto con mucha suerte y éxito en este segundo período.</p>
+      <p class="muted" style="margin-top:14px">Gracias también al profesor Odel Cuesta por acompañar la actividad y a Manuela Arboleda por recoger la mayoría de las fotos para hacer esto posible.</p>
+      <div class="credits">
+        <div class="credit"><strong>Mensaje</strong><br>Johan, representante del salón</div>
+        <div class="credit"><strong>Crédito especial</strong><br>Profesor Odel Cuesta</div>
+        <div class="credit"><strong>Apoyo clave</strong><br>Manuela Arboleda</div>
+      </div>
+      <div class="controls" style="justify-content:center;margin-top:24px">
+        <button class="primary" id="closeFinal">Seguir viendo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const students = [
+      { personName: "Ana Isabel", characterName: "Tiana", babyImage: "ana isabel/ana isabel.jpeg", characterImage: "ana isabel/ana isabel dibujo.jpeg" },
+      { personName: "Andr\u00E9s Felipe", characterName: "Broly", babyImage: "andres felipe/pepe.jpeg", characterImage: "andres felipe/pepe dibujo.jpeg" },
+      { personName: "\u00C1ngel", characterName: "El P\u00E1jaro Loco", babyImage: "angel/angel.jpeg", characterImage: "angel/angel dibujo.jpeg" },
+      { personName: "Charry", characterName: "Ezio Auditore", babyImage: "charry/charry.jpeg", characterImage: "charry/charry dibujo.jpeg" },
+      { personName: "Dulce", characterName: "Mulan", babyImage: "dulce/dulce.jpeg", characterImage: "dulce/dulce dibujo.jpeg" },
+      { personName: "Eliezer", characterName: "Batman", babyImage: "eliezer/eliezer.jpeg", characterImage: "eliezer/eliezer dibujo.jpeg" },
+      { personName: "Isabel V", characterName: "Reina", babyImage: "isabel V/isabel.jpeg", characterImage: "isabel V/isabel dibujo.jpeg" },
+      { personName: "Jer\u00F3nimo Echavarr\u00EDa", characterName: "Gok\u00FA", babyImage: "jeronimo echavarria/jeronimo echavarria.jpeg", characterImage: "jeronimo echavarria/jeronimo echavarria dibujo.jpg" },
+      { personName: "Johan", characterName: "Deku", babyImage: "johan/johan.jpeg", characterImage: "johan/johan dibujo.jpeg" },
+      { personName: "Juan Jos\u00E9 Gallego", characterName: "Luffy", babyImage: "juan jose gallego/gallego.jpeg", characterImage: "juan jose gallego/gallego dibujo.jpeg" },
+      { personName: "Juan Pablo Cifuentes", characterName: "Barbilla Roja", babyImage: "juan pablo cifuentes/juan pablo cifuentes.jpeg", characterImage: "juan pablo cifuentes/juan pablo cifuentes dibujo.jpeg" },
+      { personName: "Luciana Cort\u00E9s", characterName: "Sakura Kinomoto", babyImage: "luciana cortes/luciana.jpeg", characterImage: "luciana cortes/luciana dibujo.jpeg" },
+      { personName: "Manuela A", characterName: "Jazm\u00EDn", babyImage: "manuela A/manuela A.jpeg", characterImage: "manuela A/manuela  A dibujo.jpeg" },
+      { personName: "Manuela G", characterName: "Wendy Corduroy", babyImage: "manuela G/manuela G.jpeg", characterImage: "manuela G/manuela G dibujo.jpeg" },
+      { personName: "Mariana Luna", characterName: "Hello Kitty", babyImage: "mariana luna/luna.jpeg", characterImage: "mariana luna/luna dibujo.jpeg" },
+      { personName: "Mariana Mart\u00EDnez", characterName: "Raquelle", babyImage: "mariana martinez/mariana M.jpeg", characterImage: "mariana martinez/mariana M dibujo.jpeg" },
+      { personName: "Mariantonia", characterName: "Rapunzel", babyImage: "mariantonia/mariantonia.jpeg", characterImage: "mariantonia/mariantonia dibujo.jpeg" },
+      { personName: "Mat\u00EDas", characterName: "Bugs Bunny", babyImage: "matias/matias.jpeg", characterImage: "matias/matias dibujo.jpeg" },
+      { personName: "Miguel Cifuentes", characterName: "Gumball", babyImage: "miguel cifuentes/mifuel cifu.jpeg", characterImage: "miguel cifuentes/miguel cifu dibujo.jpeg" },
+      { personName: "Nicol\u00E1s", characterName: "Golfo", babyImage: "nicolas/nicolas.jpeg", characterImage: "nicolas/nicolas dibujo.jpeg" },
+      { personName: "Otalvaro", characterName: "Deadpool", babyImage: "otalvaro/otalvaro.jpeg", characterImage: "otalvaro/otalvaro dibujo.jpeg" },
+      { personName: "Sophie", characterName: "Marie", babyImage: "sophie/sophie.jpeg", characterImage: "sophie/sophie dibujo.jpeg" },
+      { personName: "Tom\u00E1s Monsalve", characterName: "Spider-Man", babyImage: "tomas/Tomas Monsalve.jpeg", characterImage: "tomas/tomas monsalve dibujo.jpeg" },
+      { personName: "Vallejo", characterName: "Banana Joe", babyImage: "vallejo/vallejo.jpeg", characterImage: "vallejo/vallejo dibujo.jpeg" },
+      { personName: "Vera", characterName: "Rito", babyImage: "vera/vera.jpeg", characterImage: "vera/vera dibujo.jpeg" }
+    ].map((student, index) => ({ ...student, id: index + 1, solved: false, attempts: 0 }));
+
+    const state = {
+      activeId: null,
+      wheelRotation: 0,
+      roulettePool: students.map(student => student.personName),
+      selectedName: null,
+      targetCardId: null,
+      finished: false
+    };
+
+    const $ = id => document.getElementById(id);
+    const refs = {
+      cardGrid: $("cardGrid"),
+      progressFill: $("progressFill"),
+      progressText: $("progressText"),
+      statTotal: $("statTotal"),
+      statSolved: $("statSolved"),
+      statPending: $("statPending"),
+      wheelTrack: $("wheelTrack"),
+      rouletteResult: $("rouletteResult"),
+      spinButton: $("spinButton"),
+      removeButton: $("removeButton"),
+      introOverlay: $("introOverlay"),
+      startButton: $("startButton"),
+      guessModal: $("guessModal"),
+      modalPreview: $("modalPreview"),
+      modalTitle: $("modalTitle"),
+      modalHint: $("modalHint"),
+      attemptsRow: $("attemptsRow"),
+      guessInput: $("guessInput"),
+      guessStatus: $("guessStatus"),
+      submitGuess: $("submitGuess"),
+      closeModal: $("closeModal"),
+      suggestions: $("suggestions"),
+      turnBanner: $("turnBanner"),
+      turnBannerName: $("turnBannerName"),
+      turnBannerText: $("turnBannerText"),
+      finalOverlay: $("finalOverlay"),
+      closeFinal: $("closeFinal")
+    };
+
+    function normalize(value) {
+      return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    }
+
+    function esc(value) {
+      return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function getStudent(id) {
+      return students.find(student => student.id === id) || null;
+    }
+
+    function getRouletteTarget(selectedName) {
+      const preferred = students.filter(student => !student.solved && normalize(student.personName) !== normalize(selectedName));
+      if (preferred.length) {
+        return preferred[Math.floor(Math.random() * preferred.length)];
+      }
+      const fallback = students.filter(student => normalize(student.personName) !== normalize(selectedName));
+      if (fallback.length) {
+        return fallback[Math.floor(Math.random() * fallback.length)];
+      }
+      return null;
+    }
+
+    function showTurnBanner(name, text) {
+      refs.turnBannerName.textContent = name;
+      refs.turnBannerText.textContent = text;
+      refs.turnBanner.classList.remove("hidden");
+    }
+
+    function hideTurnBanner() {
+      refs.turnBanner.classList.add("hidden");
+    }
+
+    function renderCards() {
+      refs.cardGrid.innerHTML = "";
+      students.forEach(student => {
+        const card = document.createElement("article");
+        const classes = ["card"];
+        if (student.solved) classes.push("flipped", "locked");
+        if (state.targetCardId === student.id && !student.solved) classes.push("target");
+        card.className = classes.join(" ");
+        card.dataset.id = String(student.id);
+        card.innerHTML = `
+          <div class="inner">
+            <div class="face">
+              <img src="${encodeURI(student.characterImage)}" alt="${esc(student.characterName)}" loading="lazy">
+              <div class="info">
+                <h3 class="label">${esc(student.characterName)}</h3>
+                <p class="sub">Toca para adivinar de quién es esta tarjeta.</p>
+              </div>
+            </div>
+            <div class="face back">
+              <img src="${encodeURI(student.babyImage)}" alt="${esc(student.personName)}" loading="lazy">
+              <div class="info">
+                <span class="badge">Descubierto</span>
+                <h3 class="label">${esc(student.personName)}</h3>
+                <p class="sub">Esta tarjeta ya quedó revelada.</p>
+              </div>
+            </div>
+          </div>`;
+        card.addEventListener("click", () => {
+          if (!student.solved) openModal(student.id);
+        });
+        refs.cardGrid.appendChild(card);
+      });
+    }
+
+    function renderWheel() {
+      refs.wheelTrack.innerHTML = "";
+      const total = Math.max(state.roulettePool.length, 1);
+      const step = 360 / total;
+      state.roulettePool.forEach((name, index) => {
+        const node = document.createElement("div");
+        node.className = "wheel-name";
+        node.style.transform = `rotate(${index * step}deg) translateY(-105px)`;
+        node.innerHTML = `<span>${esc(name)}</span>`;
+        refs.wheelTrack.appendChild(node);
+      });
+      refs.wheelTrack.style.transform = `rotate(${state.wheelRotation}deg)`;
+    }
+
+    function updateStats() {
+      const total = students.length;
+      const solved = students.filter(student => student.solved).length;
+      refs.statTotal.textContent = String(total);
+      refs.statSolved.textContent = String(solved);
+      refs.statPending.textContent = String(total - solved);
+      refs.progressFill.style.width = `${(solved / total) * 100}%`;
+      refs.progressText.textContent = `${solved} de ${total} tarjetas descubiertas.`;
+      if (!state.finished && solved === total) {
+        state.finished = true;
+        showFinal();
+      }
+    }
+
+    function setStatus(message, error) {
+      refs.guessStatus.innerHTML = message;
+      refs.guessStatus.style.color = error ? "#b91c1c" : "var(--muted)";
+      refs.guessStatus.style.background = error ? "rgba(254,226,226,.95)" : "rgba(255,255,255,.78)";
+    }
+
+    function updateDots(student) {
+      refs.attemptsRow.innerHTML = "";
+      for (let i = 0; i < 3; i += 1) {
+        const dot = document.createElement("span");
+        dot.className = "dot";
+        if (student.solved) dot.classList.add("ok");
+        else if (i < student.attempts) dot.classList.add("used");
+        refs.attemptsRow.appendChild(dot);
+      }
+    }
+
+    function openModal(id) {
+      const student = getStudent(id);
+      if (!student) return;
+      state.activeId = id;
+      refs.modalPreview.src = encodeURI(student.characterImage);
+      refs.modalTitle.textContent = student.characterName;
+      refs.modalHint.textContent = `Intentos usados: ${student.attempts} de 3.`;
+      refs.guessInput.value = "";
+      refs.guessInput.disabled = false;
+      refs.submitGuess.disabled = false;
+      updateDots(student);
+      setStatus("Escribe un nombre y escoge una opción filtrada del salón.", false);
+      renderSuggestions("");
+      refs.guessModal.classList.remove("hidden");
+      document.body.classList.add("lock");
+      setTimeout(() => refs.guessInput.focus(), 60);
+    }
+
+    function closeModal() {
+      state.activeId = null;
+      refs.guessModal.classList.add("hidden");
+      refs.suggestions.classList.remove("show");
+      if (refs.introOverlay.classList.contains("hidden") && refs.finalOverlay.classList.contains("hidden")) {
+        document.body.classList.remove("lock");
+      }
+    }
+
+    function renderSuggestions(query) {
+      const q = normalize(query);
+      const matches = students
+        .map(student => student.personName)
+        .filter(name => q && normalize(name).includes(q))
+        .sort((a, b) => a.localeCompare(b, "es"))
+        .slice(0, 8);
+      refs.suggestions.innerHTML = "";
+      if (!matches.length) {
+        refs.suggestions.classList.remove("show");
+        return;
+      }
+      matches.forEach(name => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "suggestion";
+        btn.textContent = name;
+        btn.addEventListener("click", () => {
+          refs.guessInput.value = name;
+          refs.suggestions.classList.remove("show");
+          refs.guessInput.focus();
+        });
+        refs.suggestions.appendChild(btn);
+      });
+      refs.suggestions.classList.add("show");
+    }
+
+    function submitGuess() {
+      const student = getStudent(state.activeId);
+      if (!student || student.solved) return;
+      const raw = refs.guessInput.value.trim();
+      if (!raw) {
+        setStatus("Escribe un nombre antes de enviar.", true);
+        return;
+      }
+      const guessed = students.find(item => normalize(item.personName) === normalize(raw));
+      if (!guessed) {
+        setStatus("Ese nombre no coincide exactamente con alguien del salón. Elígelo de la lista filtrada o escríbelo completo.", true);
+        return;
+      }
+      if (normalize(guessed.personName) === normalize(student.personName)) {
+        student.solved = true;
+        if (state.targetCardId === student.id) {
+          state.targetCardId = null;
+        }
+        updateDots(student);
+        setStatus(`<strong>Correcto.</strong> ${esc(student.personName)} quedó descubierto.`, false);
+        renderCards();
+        updateStats();
+        setTimeout(closeModal, 700);
+        return;
+      }
+      student.attempts += 1;
+      refs.modalHint.textContent = `Intentos usados: ${student.attempts} de 3.`;
+      updateDots(student);
+      if (student.attempts >= 3) {
+        setStatus("Se acabaron los 3 intentos. El dueño del personaje, por favor se puede levantar y decir quién es. Cuando ya se revele, pueden escribir el nombre correcto para voltear la tarjeta.", true);
+        refs.suggestions.classList.remove("show");
+        refs.guessInput.focus();
+        refs.guessInput.select();
+        return;
+      }
+      const left = 3 - student.attempts;
+      setStatus(`No era <strong>${esc(guessed.personName)}</strong>. Quedan ${left} intento${left === 1 ? "" : "s"}.`, true);
+      refs.guessInput.select();
+    }
+
+    function spin() {
+      if (!state.roulettePool.length) {
+        refs.rouletteResult.textContent = "Ya no quedan nombres en la ruleta.";
+        refs.removeButton.disabled = true;
+        return;
+      }
+      hideTurnBanner();
+      refs.spinButton.disabled = true;
+      refs.removeButton.disabled = true;
+      const selectedIndex = Math.floor(Math.random() * state.roulettePool.length);
+      const selectedName = state.roulettePool[selectedIndex];
+      const segment = 360 / state.roulettePool.length;
+      const targetAngle = selectedIndex * segment + segment / 2;
+      state.wheelRotation += 360 * (5 + Math.floor(Math.random() * 2)) - targetAngle;
+      state.selectedName = selectedName;
+      const targetCard = getRouletteTarget(selectedName);
+      state.targetCardId = targetCard ? targetCard.id : null;
+      refs.wheelTrack.style.transform = `rotate(${state.wheelRotation}deg)`;
+      setTimeout(() => {
+        renderCards();
+        if (targetCard) {
+          showTurnBanner(selectedName, `Le toca adivinar ${targetCard.characterName}. Mira la cartilla resaltada en el collage.`);
+          refs.rouletteResult.innerHTML = `<strong>${esc(selectedName)}</strong> fue seleccionado por la ruleta. Le toca adivinar <strong>${esc(targetCard.characterName)}</strong>. Ya te resalte esa cartilla en el collage.`;
+        } else {
+          showTurnBanner(selectedName, "No hay otra tarjeta disponible distinta a la de esa persona.");
+          refs.rouletteResult.innerHTML = `<strong>${esc(selectedName)}</strong> fue seleccionado por la ruleta. No hay otra tarjeta disponible distinta a la de esa persona.`;
+        }
+        refs.spinButton.disabled = false;
+        refs.removeButton.disabled = false;
+      }, 4400);
+    }
+
+    function removeFromWheel() {
+      if (!state.selectedName) return;
+      state.roulettePool = state.roulettePool.filter(name => normalize(name) !== normalize(state.selectedName));
+      refs.rouletteResult.innerHTML = `<strong>${esc(state.selectedName)}</strong> fue eliminado de la ruleta.`;
+      state.selectedName = null;
+      state.targetCardId = null;
+      hideTurnBanner();
+      refs.removeButton.disabled = true;
+      renderCards();
+      renderWheel();
+    }
+
+    function showFinal() {
+      refs.finalOverlay.classList.remove("hidden");
+      document.body.classList.add("lock");
+      const colors = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#fb7185", "#facc15"];
+      for (let i = 0; i < 80; i += 1) {
+        const piece = document.createElement("span");
+        piece.className = "confetti";
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.transform = `translateY(0) rotate(${Math.random() * 140}deg)`;
+        piece.style.animationDelay = `${Math.random() * 0.8}s`;
+        piece.style.animationDuration = `${2.8 + Math.random() * 1.4}s`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 4500);
+      }
+    }
+
+    refs.startButton.addEventListener("click", () => {
+      refs.introOverlay.classList.add("hidden");
+      document.body.classList.remove("lock");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    refs.spinButton.addEventListener("click", spin);
+    refs.removeButton.addEventListener("click", removeFromWheel);
+    refs.closeModal.addEventListener("click", closeModal);
+    refs.submitGuess.addEventListener("click", submitGuess);
+    refs.closeFinal.addEventListener("click", () => {
+      refs.finalOverlay.classList.add("hidden");
+      document.body.classList.remove("lock");
+    });
+    refs.guessInput.addEventListener("input", event => renderSuggestions(event.target.value));
+    refs.guessInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitGuess();
+      }
+    });
+    refs.guessModal.addEventListener("click", event => {
+      if (event.target === refs.guessModal) closeModal();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      if (!refs.guessModal.classList.contains("hidden")) closeModal();
+      else if (!refs.finalOverlay.classList.contains("hidden")) {
+        refs.finalOverlay.classList.add("hidden");
+        document.body.classList.remove("lock");
+      }
+    });
+
+    renderCards();
+    renderWheel();
+    updateStats();
+  </script>
+</body>
+</html>
+
